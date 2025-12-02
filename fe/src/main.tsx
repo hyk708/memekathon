@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
+import ErrorBoundary from './components/ErrorBoundary.tsx';
 
 import { PrivyProvider } from '@privy-io/react-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -39,21 +40,28 @@ const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PrivyProvider
-      appId="cmilcu3wq01yxl20ctwa31l1c"
-      config={{
-        defaultChain: insectarium,
-        supportedChains: [insectarium],
-        embeddedWallets: {
-          createOnLogin: 'users-without-wallets',
-        },
-      }}
-    >
-      <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={wagmiConfig}>
-          <App />
-        </WagmiProvider>
-      </QueryClientProvider>
-    </PrivyProvider>
+    <ErrorBoundary>
+      <PrivyProvider
+        appId="cmilcu3wq01yxl20ctwa31l1c"
+        config={{
+          defaultChain: insectarium,
+          supportedChains: [insectarium],
+          embeddedWallets: {
+            createOnLogin: 'all-users', // ✅ 모든 사용자에게 embedded wallet 생성
+            requireUserPasswordOnCreate: false, // 비밀번호 없이 빠른 생성
+          },
+          appearance: {
+            theme: 'light',
+            accentColor: '#676FFF',
+          },
+        }}
+      >
+        <QueryClientProvider client={queryClient}>
+          <WagmiProvider config={wagmiConfig}>
+            <App />
+          </WagmiProvider>
+        </QueryClientProvider>
+      </PrivyProvider>
+    </ErrorBoundary>
   </StrictMode>
 );

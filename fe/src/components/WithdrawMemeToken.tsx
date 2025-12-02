@@ -4,9 +4,7 @@ import { formatUnits, parseUnits } from 'viem';
 import { MEME_TOKEN_ABI } from '../abis/MemeToken';
 import { LRTVault_ABI } from '../abis/LRTVault';
 
-// --- Contract Addresses ---
-const MEME_TOKEN_ADDRESS = '0x2f57c4abe475f0120dcb08afeb3e116bb8000f40';
-const LRTVault_ADDRESS = '0x2c400fa1935fb12e94c6cba612ab046daa6268e4';
+import { MEME_TOKEN_ADDRESS, LRT_VAULT_ADDRESS } from '../constants/contractAddresses';
 
 export function WithdrawMemeToken() {
   const [amount, setAmount] = useState<string>('');
@@ -15,7 +13,7 @@ export function WithdrawMemeToken() {
 
   // --- Read LRT Token Address ---
   const { data: lrtTokenAddress } = useReadContract({
-    address: LRTVault_ADDRESS as `0x${string}`,
+    address: LRT_VAULT_ADDRESS as `0x${string}`,
     abi: LRTVault_ABI,
     functionName: 'lrt',
     chainId: chainId,
@@ -52,7 +50,7 @@ export function WithdrawMemeToken() {
     const amountBigInt = parseUnits(amount, 18);
     // The withdraw function takes the amount of underlying assets to receive
     writeWithdraw({
-      address: LRTVault_ADDRESS as `0x${string}`,
+      address: LRT_VAULT_ADDRESS as `0x${string}`,
       abi: LRTVault_ABI,
       functionName: 'withdraw',
       args: [amountBigInt, address, address, BigInt(2) ** BigInt(256) - BigInt(1)], // assets, receiver, owner, maxSharesIn (no slippage)
@@ -69,32 +67,39 @@ export function WithdrawMemeToken() {
   }, [isWithdrawSuccess, refetchMemeTokenBalance, refetchLrtBalance]);
 
   return (
-    <div style={{ border: '1px solid #ccc', padding: '1rem', margin: '1rem 0', borderRadius: '8px' }}>
-      <h3>Withdraw Iggnoyk (KG) from LRTVault</h3>
+    <fieldset>
+      <legend><strong>Withdraw Iggnoyk (KG)</strong></legend>
       {address ? (
         <>
-          <div>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="Amount to withdraw (KG)"
-              style={{ padding: '0.5rem', marginRight: '0.5rem' }}
-            />
-            <button
-              onClick={handleWithdraw}
-              disabled={!amount || isWithdrawing || isWithdrawConfirming}
-              style={{ padding: '0.05rem 0.5rem' }}
-            >
-              {isWithdrawing || isWithdrawConfirming ? 'Withdrawing...' : 'Withdraw'}
-            </button>
-          </div>
-          {isWithdrawSuccess && <p>Withdraw successful!</p>}
-          {withdrawError && <p style={{ color: 'red' }}>Withdraw Error: {(withdrawError as Error)?.message}</p>}
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Amount"
+          />
+          <br />
+          <button
+            onClick={handleWithdraw}
+            disabled={!amount || isWithdrawing || isWithdrawConfirming}
+          >
+            {isWithdrawing || isWithdrawConfirming ? 'Withdrawing...' : 'Withdraw'}
+          </button>
+          {isWithdrawSuccess && (
+            <>
+              <br />
+              <strong>✓ Success!</strong>
+            </>
+          )}
+          {withdrawError && (
+            <>
+              <br />
+              <small><strong>Error:</strong> {(withdrawError as Error)?.message}</small>
+            </>
+          )}
         </>
       ) : (
-        <p>Please connect your wallet to withdraw.</p>
+        <p>Connect wallet to withdraw</p>
       )}
-    </div>
+    </fieldset>
   );
 }
