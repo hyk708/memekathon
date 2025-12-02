@@ -1,0 +1,3 @@
+[submodule "foundry-template/lib/permit2"]
+	path = foundry-template/lib/permit2
+	url = https://github.com/Uniswap/permit2
