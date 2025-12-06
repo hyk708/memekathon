@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWallets } from '@privy-io/react-auth';
-import { useReadContract } from 'wagmi';
-import { formatUnits } from 'viem';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { parseEther, formatUnits } from 'viem';
 import { IERC20ABI } from '../abis/IERC20';
-import { IGM_TOKEN_ADDRESS } from '../constants/contractAddresses';
+import { EarnVaultABI } from '../abis/EarnVault';
+import { IGM_TOKEN_ADDRESS, EARN_VAULT_ADDRESS, VIGM_TOKEN_ADDRESS } from '../constants/contractAddresses';
 import { formatBalance } from '../utils/formatBalance';
 
 export function EarnPage() {
@@ -16,12 +17,132 @@ export function EarnPage() {
   const address = wallet?.address as `0x${string}` | undefined;
 
   // Get igM balance
-  const { data: igmBalance } = useReadContract({
+  const { data: igmBalance, refetch: refetchIgmBalance } = useReadContract({
     address: IGM_TOKEN_ADDRESS as `0x${string}`,
     abi: IERC20ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
   });
+
+  // Get vigM balance
+  const { data: vigmBalance, refetch: refetchVigmBalance } = useReadContract({
+    address: VIGM_TOKEN_ADDRESS as `0x${string}`,
+    abi: IERC20ABI,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+  });
+
+  // Get expected vigM output for deposit
+  const { data: expectedVigm } = useReadContract({
+    address: EARN_VAULT_ADDRESS as `0x${string}`,
+    abi: EarnVaultABI,
+    functionName: 'convertToShares',
+    args: depositAmount ? [parseEther(depositAmount)] : undefined,
+  });
+
+  // Get expected igM output for withdrawal
+  const { data: expectedIgm } = useReadContract({
+    address: EARN_VAULT_ADDRESS as `0x${string}`,
+    abi: EarnVaultABI,
+    functionName: 'convertToAssets',
+    args: withdrawalAmount ? [parseEther(withdrawalAmount)] : undefined,
+  });
+
+  // Check igM allowance
+  const { data: igmAllowance } = useReadContract({
+    address: IGM_TOKEN_ADDRESS as `0x${string}`,
+    abi: IERC20ABI,
+    functionName: 'allowance',
+    args: address ? [address, EARN_VAULT_ADDRESS as `0x${string}`] : undefined,
+  });
+
+  // Approve transaction
+  const { writeContract: approve, data: approveHash } = useWriteContract();
+  const { isLoading: isApprovePending, isSuccess: isApproveSuccess } = useWaitForTransactionReceipt({
+    hash: approveHash,
+  });
+
+  // Deposit transaction
+  const { writeContract: deposit, data: depositHash } = useWriteContract();
+  const { isLoading: isDepositPending, isSuccess: isDepositSuccess } = useWaitForTransactionReceipt({
+    hash: depositHash,
+  });
+
+  // Withdraw transaction
+  const { writeContract: withdraw, data: withdrawHash } = useWriteContract();
+  const { isLoading: isWithdrawPending, isSuccess: isWithdrawSuccess } = useWaitForTransactionReceipt({
+    hash: withdrawHash,
+  });
+
+  // Refetch balances after successful transactions
+  useEffect(() => {
+    if (isDepositSuccess) {
+      refetchIgmBalance();
+      refetchVigmBalance();
+      setDepositAmount('');
+    }
+  }, [isDepositSuccess, refetchIgmBalance, refetchVigmBalance]);
+
+  useEffect(() => {
+    if (isWithdrawSuccess) {
+      refetchIgmBalance();
+      refetchVigmBalance();
+      setWithdrawalAmount('');
+    }
+  }, [isWithdrawSuccess, refetchIgmBalance, refetchVigmBalance]);
+
+  const handleApprove = async () => {
+    if (!address || !depositAmount) return;
+
+    try {
+      approve({
+        address: IGM_TOKEN_ADDRESS as `0x${string}`,
+        abi: IERC20ABI,
+        functionName: 'approve',
+        args: [EARN_VAULT_ADDRESS as `0x${string}`, parseEther(depositAmount)],
+      });
+    } catch (error) {
+      console.error('Approve failed:', error);
+    }
+  };
+
+  const handleDeposit = async () => {
+    if (!address || !depositAmount) return;
+
+    try {
+      deposit({
+        address: EARN_VAULT_ADDRESS as `0x${string}`,
+        abi: EarnVaultABI,
+        functionName: 'deposit',
+        args: [parseEther(depositAmount), address, 0n], // assets, receiver, minSharesOut
+      });
+    } catch (error) {
+      console.error('Deposit failed:', error);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!address || !withdrawalAmount) return;
+
+    try {
+      withdraw({
+        address: EARN_VAULT_ADDRESS as `0x${string}`,
+        abi: EarnVaultABI,
+        functionName: 'withdraw',
+        args: [
+          parseEther(withdrawalAmount), // assets
+          address, // receiver
+          address, // owner
+          parseEther(withdrawalAmount), // maxSharesIn (use same amount for simplicity)
+        ],
+      });
+    } catch (error) {
+      console.error('Withdraw failed:', error);
+    }
+  };
+
+  const needsApproval = depositAmount && igmAllowance !== undefined &&
+    parseEther(depositAmount) > (igmAllowance as bigint);
 
   return (
     <center>
@@ -74,7 +195,7 @@ export function EarnPage() {
                 <td>
                   <strong>Deposit</strong>
                   <br />
-                  <big>0.00</big>
+                  <big>{expectedVigm ? formatBalance(formatUnits(expectedVigm as bigint, 18)) : '0.00'}</big>
                   <br />
                   <small>$0</small>
                 </td>
@@ -84,9 +205,15 @@ export function EarnPage() {
               </tr>
               <tr>
                 <td colSpan={2}>
-                  <button disabled={!address} style={{ width: '100%', padding: '10px' }}>
-                    Deposit
-                  </button>
+                  {needsApproval ? (
+                    <button onClick={handleApprove} disabled={!address || !depositAmount || isApprovePending} style={{ width: '100%', padding: '10px' }}>
+                      {isApprovePending ? 'Approving...' : 'Approve igM'}
+                    </button>
+                  ) : (
+                    <button onClick={handleDeposit} disabled={!address || !depositAmount || isDepositPending} style={{ width: '100%', padding: '10px' }}>
+                      {isDepositPending ? 'Depositing...' : 'Deposit'}
+                    </button>
+                  )}
                 </td>
               </tr>
             </tbody>
@@ -113,7 +240,7 @@ export function EarnPage() {
                 <td align="right">
                   <span><strong>vigM</strong></span>
                   <br />
-                  <small>0.00 vigM</small>
+                  <small>{vigmBalance ? formatBalance(formatUnits(vigmBalance as bigint, 18)) : '0.00'} vigM</small>
                 </td>
               </tr>
               <tr>
@@ -123,7 +250,7 @@ export function EarnPage() {
                 <td>
                   <strong>Withdrawal in ~2 blocks</strong>
                   <br />
-                  <big>0.00</big>
+                  <big>{expectedIgm ? formatBalance(formatUnits(expectedIgm as bigint, 18)) : '0.00'}</big>
                   <br />
                   <small>$0</small>
                 </td>
@@ -133,8 +260,8 @@ export function EarnPage() {
               </tr>
               <tr>
                 <td colSpan={2}>
-                  <button disabled={!address} style={{ width: '100%', padding: '10px' }}>
-                    Withdrawal
+                  <button onClick={handleWithdraw} disabled={!address || !withdrawalAmount || isWithdrawPending} style={{ width: '100%', padding: '10px' }}>
+                    {isWithdrawPending ? 'Withdrawing...' : 'Withdrawal'}
                   </button>
                 </td>
               </tr>
