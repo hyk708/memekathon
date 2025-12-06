@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './DepositMemeToken.css';
 import { useWallets } from '@privy-io/react-auth';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId, useSignTypedData } from 'wagmi';
 import { formatUnits, parseUnits, type Address } from 'viem';

@@ -3,8 +3,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color: #20232a;
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid #ccc; /* Basic border */
 }
 
 .nav-logo a {
@@ -23,7 +22,6 @@
 }
 
 .nav-links a {
-  color: #fff;
   text-decoration: none;
   font-weight: bold;
   padding: 8px 12px;
@@ -32,21 +30,5 @@
 }
 
 .nav-links a:hover, .nav-links a.active {
-  background-color: #282c34;
-}
-
-.nav-connect button {
-  padding: 10px 20px;
-  border-radius: 5px;
-  border: none;
-  background-color: #61dafb;
-  color: #20232a;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.nav-connect button:hover {
-  background-color: #21a1f2;
+  background-color: #f0f0f0; /* Basic background */
 }

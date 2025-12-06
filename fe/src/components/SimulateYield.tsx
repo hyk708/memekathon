@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './SimulateYield.css';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi';
 import { formatUnits, parseUnits } from 'viem';
 

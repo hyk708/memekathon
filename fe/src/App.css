@@ -1,18 +1,4 @@
-#root {
-  width: 100%;
-}
-
-.app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-.main-content {
-  flex-grow: 1;
-  padding: 2rem;
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
+/*
+  This file is intentionally left blank.
+  All app-specific styles are managed in /src/styles/
+*/
