@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import './App.css';
 import { Navigation } from './components/Navigation';
 import { MainPage } from './pages/MainPage';
 import { StakePage } from './pages/StakePage';

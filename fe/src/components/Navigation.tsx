@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import './Navigation.css';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import memecoreLogo from '../assets/memecorelogo.svg';
 

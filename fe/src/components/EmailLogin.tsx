@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import './EmailLogin.css';
 import { useLoginWithEmail } from '@privy-io/react-auth';
 
 export function EmailLogin() {
