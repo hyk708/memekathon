@@ -1,0 +1,27 @@
+/* 1. 폰트: 깔끔한 SUIT 또는 Pretendard */
+@import url("https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT.css");
+
+:root {
+  /* ---- 1. 컬러 팔레트 (여기만 바꾸면 분위기가 바뀝니다) ---- */
+  --primary-color: #743df5; /* */
+  --primary-hover: #5c30c2; /* 버튼 올렸을 때 색 */
+
+  --bg-page: #e3fff9; /* 아주 연한 회색 배경 (눈이 편안함) */
+  --bg-card: #ffffff; /* 카드 배경은 깨끗한 흰색 */
+
+  --text-main: #100817; /* 진한 쥐색 (완전 검정보다 세련됨) */
+  --text-sub: #2b2e33; /* 연한 회색 텍스트 */
+
+  --border-light: #494949; /* 아주 얇고 연한 테두리 */
+
+  /* ---- 2. 형태와 질감 (세련됨의 핵심) ---- */
+  --radius-sm: 8px; /* 버튼 모서리 둥글기 */
+  --radius-lg: 16px; /* 카드 모서리 둥글기 */
+
+  /* 부드러운 그림자 (검정 그림자 대신 투명도 사용) */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -2px rgb(0 0 0 / 0.05);
+
+  --font-main: "SUIT", sans-serif;
+}

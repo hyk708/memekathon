@@ -1,0 +1,29 @@
+:root {
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  margin: 0;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  /* 2. 배경 이미지 경로 (따옴표 안에 이미지 파일 경로를 넣으세요) */
+  background-image: url("loading-land.webp");
+
+  /* 3. 위치 고정: 스크롤해도 이미지는 화면에 박제됨 */
+  background-attachment: fixed;
+
+  /* 4. 위치 설정: 가로는 가운데(center), 세로는 바닥(bottom) */
+  background-position: center bottom;
+
+  /* 5. 반복 안 함 */
+  background-repeat: no-repeat;
+
+  /* 6. 크기 설정: 가로는 꽉 차게(100%), 세로는 비율에 맞춰서(auto) */
+  background-size: 100% auto;
+
+  color: var(--text-black);
+}
+
+#root {
+  width: 100%;
+}

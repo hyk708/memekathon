@@ -9,7 +9,6 @@ function App() {
     <BrowserRouter>
       <div>
         <Navigation />
-        <hr />
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/stake" element={<StakePage />} />
