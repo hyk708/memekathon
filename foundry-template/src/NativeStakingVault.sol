@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+// import "forge-std/console.sol"; // Removed for debugging
 import "./LRT.sol";
 
 /**
@@ -26,6 +27,7 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
     // State variables
     LRT public immutable stM; // stM token (Staked M)
     address public strategy; // Strategy address with special privileges
+    uint256 public totalNativeAssets; // Explicitly track total native M assets
 
     // Strategy timelock
     address public proposedStrategy;
@@ -54,6 +56,7 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
     constructor() Ownable(msg.sender) {
         // Deploy stM token (Staked M)
         stM = new LRT("Staked M", "stM");
+        totalNativeAssets = 0; // Initialize
     }
 
     /**
@@ -72,7 +75,7 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
         require(receiver != address(0), "Zero address");
 
         // Calculate shares based on balance BEFORE this deposit
-        uint256 assetsBefore = totalAssets() - msg.value;
+        uint256 assetsBefore = totalNativeAssets; // Use explicit tracker
         uint256 totalSupply = stM.totalSupply();
         shares = (msg.value * (totalSupply + VIRTUAL_OFFSET)) / (assetsBefore + VIRTUAL_OFFSET);
 
@@ -81,6 +84,8 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
 
         // Mint stM shares to receiver
         stM.mint(receiver, shares);
+
+        totalNativeAssets += msg.value; // Update explicit tracker
 
         emit Deposit(msg.sender, receiver, msg.value, shares);
     }
@@ -108,6 +113,8 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
 
         // Allowance check and burn handled in LRT.burn()
         stM.burn(owner, msg.sender, shares);
+
+        totalNativeAssets -= assets; // Update explicit tracker
 
         // Transfer native $M to receiver
         (bool success,) = payable(receiver).call{value: assets}("");
@@ -140,6 +147,8 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
         // Allowance check and burn handled in LRT.burn()
         stM.burn(owner, msg.sender, shares);
 
+        totalNativeAssets -= assets; // Update explicit tracker
+
         // Transfer native $M to receiver
         (bool success,) = payable(receiver).call{value: assets}("");
         require(success, "Transfer failed");
@@ -154,7 +163,7 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
      * @return shares Equivalent amount of stM shares
      */
     function convertToShares(uint256 assets) public view returns (uint256 shares) {
-        uint256 _totalAssets = totalAssets();
+        uint256 _totalAssets = totalNativeAssets; // Use explicit tracker
         uint256 totalSupply = stM.totalSupply();
 
         // Virtual offset prevents inflation attack
@@ -167,7 +176,7 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
      * @return assets Equivalent amount of $M
      */
     function convertToAssets(uint256 shares) public view returns (uint256 assets) {
-        uint256 _totalAssets = totalAssets();
+        uint256 _totalAssets = totalNativeAssets; // Use explicit tracker
         uint256 totalSupply = stM.totalSupply();
 
         if (totalSupply == 0) {
@@ -183,7 +192,7 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
      * @return Total native token balance
      */
     function totalAssets() public view returns (uint256) {
-        return address(this).balance;
+        return totalNativeAssets; // Return explicit tracker
     }
 
     /**
@@ -239,19 +248,20 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
             dailySlashed = 0;
         }
 
-        uint256 currentAssets = totalAssets();
+        uint256 currentAssets = totalNativeAssets; // Use explicit tracker
         uint256 maxSlash = (currentAssets * MAX_DAILY_SLASH_PERCENT) / 100;
         require(dailySlashed + amount <= maxSlash, "Daily limit exceeded");
 
         require(currentAssets >= amount, "Insufficient balance");
 
         dailySlashed += amount;
+        totalNativeAssets -= amount; // Update explicit tracker
 
         // Transfer to dead address to effectively burn
         (bool success,) = payable(address(0xdead)).call{value: amount}("");
         require(success, "Slash transfer failed");
 
-        emit Slashed(amount, totalAssets());
+        emit Slashed(amount, totalNativeAssets); // Emit with updated tracker
     }
 
     // Backwards compatibility: deposit without slippage param (uses 0 as min)
@@ -270,5 +280,7 @@ contract NativeStakingVault is Ownable, ReentrancyGuard {
     }
 
     // Receive function to accept native token deposits
-    receive() external payable {}
+    receive() external payable {
+        totalNativeAssets += msg.value; // Update explicit tracker
+    }
 }
