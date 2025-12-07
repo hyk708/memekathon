@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Style Guide - Memecore</title>
+  <!-- This links to the main CSS file that your friend will edit. -->
+  <link rel="stylesheet" href="./src/styles/styles/main.css">
+  <style>
+    /* Helper styles for the guide itself */
+    body { padding: 2rem; }
+    .component-section {
+      margin-bottom: 4rem;
+      padding: 2rem;
+      border: 2px dashed #555;
+      border-radius: 10px;
+    }
+    .component-section h2 {
+      margin-top: 0;
+      color: #999;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Project Style Guide</h1>
+  <p>Edit the files in <code>/src/styles/</code> and refresh this page to see your changes.</p>
+
+  <!-- Navigation Section -->
+  <div class="component-section">
+    <h2>Navigation</h2>
+    <!-- This is the HTML structure the React <Navigation> component should create -->
+    <nav class="navbar">
+      <div class="nav-logo">
+        <a href="#">
+          <!-- You can use a placeholder image or the actual logo -->
+          <img src="./src/assets/memecorelogo.svg" alt="Memecore Logo" style="height: 35px;" />
+        </a>
+      </div>
+      <div class="nav-links">
+        <a href="#">Stake</a>
+        <a href="#" class="active">Earn</a>
+        <a href="#">Point</a>
+        <a href="#">Docs</a>
+      </div>
+      <div class="nav-connect">
+        <button class="btn">Connect</button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Card Section (for Deposit/Withdraw) -->
+  <div class="component-section">
+    <h2>Card</h2>
+    <!-- This is the HTML structure the React <DepositMemeToken> component should create -->
+    <div class="card">
+      <h2>Deposit Meme Token</h2>
+      <p><strong>Rate:</strong> 1 stKG = 1.05 KG</p>
+      <p><strong>Your KG:</strong> 1,204.50</p>
+      <p><strong>Your stKG:</strong> 500.00</p>
+      <hr style="width: 100%; border-color: #444; margin-bottom: 1rem;">
+      <input type="number" placeholder="Amount">
+      <button class="btn">Deposit</button>
+    </div>
+  </div>
+
+  <!-- Button States -->
+  <div class="component-section">
+    <h2>Buttons</h2>
+    <button class="btn">Default Button</button>
+    <button class="btn" disabled>Disabled Button</button>
+  </div>
+
+</body>
+</html>

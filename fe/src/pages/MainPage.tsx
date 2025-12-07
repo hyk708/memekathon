@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useWallets } from '@privy-io/react-auth';
 import { useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { parseEther, formatUnits } from 'viem';
-import { NativeStakingVaultABI } from '../abis/NativeStakingVault';
-import { IERC20ABI } from '../abis/IERC20';
+import { nativeStakingVaultAbi } from '../abis/NativeStakingVault';
+import { erc20Abi } from 'viem';
 import { NATIVE_STAKING_VAULT_ADDRESS, IGM_TOKEN_ADDRESS } from '../constants/contractAddresses';
 import { formatBalance } from '../utils/formatBalance';
 
@@ -23,7 +23,7 @@ export function MainPage() {
   // Get igM balance
   const { data: igmBalance, refetch: refetchIgmBalance } = useReadContract({
     address: IGM_TOKEN_ADDRESS as `0x${string}`,
-    abi: IERC20ABI,
+    abi: erc20Abi,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
   });
@@ -31,7 +31,7 @@ export function MainPage() {
   // Get expected igM output
   const { data: expectedIgm } = useReadContract({
     address: NATIVE_STAKING_VAULT_ADDRESS as `0x${string}`,
-    abi: NativeStakingVaultABI,
+    abi: nativeStakingVaultAbi,
     functionName: 'convertToShares',
     args: amount ? [parseEther(amount)] : undefined,
   });
@@ -53,76 +53,37 @@ export function MainPage() {
 
   const handleStake = async () => {
     if (!address || !amount) return;
-
-    try {
-      deposit({
-        address: NATIVE_STAKING_VAULT_ADDRESS as `0x${string}`,
-        abi: NativeStakingVaultABI,
-        functionName: 'deposit',
-        args: [address, 0n], // receiver, minSharesOut (0 for now)
-        value: parseEther(amount),
-      });
-    } catch (error) {
-      console.error('Stake failed:', error);
-    }
+    deposit({
+      address: NATIVE_STAKING_VAULT_ADDRESS as `0x${string}`,
+      abi: nativeStakingVaultAbi,
+      functionName: 'deposit',
+      args: [address, 0n],
+      value: parseEther(amount),
+    });
   };
 
   return (
-    <center>
-      <h2>liquid staking on Memecore</h2>
-
-      <fieldset style={{ width: '500px', padding: '30px', marginTop: '50px' }}>
-        <legend></legend>
-
-        <table width="100%" cellPadding={10}>
-          <tbody>
-            <tr>
-              <td>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0"
-                  size={30}
-                />
-                <br />
-                <small>$0</small>
-              </td>
-              <td align="right">
-                <span><strong>M</strong></span>
-                <br />
-                <small>{mBalance ? formatBalance(formatUnits(mBalance.value, 18)) : '0.00'} M</small>
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={2}>
-                <hr />
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <strong>Stake</strong>
-                <br />
-                <big>{expectedIgm ? formatBalance(formatUnits(expectedIgm as bigint, 18)) : '0.00'}</big>
-                <br />
-                <small>$0</small>
-              </td>
-              <td align="right">
-                <span><strong>igM</strong></span>
-                <br />
-                <small>{igmBalance ? formatBalance(formatUnits(igmBalance as bigint, 18)) : '0.00'} igM</small>
-              </td>
-            </tr>
-            <tr>
-              <td colSpan={2} align="center">
-                <button onClick={handleStake} disabled={!address || !amount || isDepositPending} style={{ width: '100%', padding: '10px' }}>
-                  {isDepositPending ? 'Staking...' : 'Stake'}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </fieldset>
-    </center>
+    <div className="card">
+      <h2>Liquid Staking on Memecore</h2>
+      <div className="input-group">
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="0.0"
+        />
+        <div className="token-info">
+          <span>M</span>
+          <small>Balance: {mBalance ? formatBalance(formatUnits(mBalance.value, 18)) : '0.00'}</small>
+        </div>
+      </div>
+      <div className="output-group">
+        <span>You will receive ~</span>
+        <span>{expectedIgm ? formatBalance(formatUnits(expectedIgm as bigint, 18)) : '0.00'} igM</span>
+      </div>
+      <button onClick={handleStake} disabled={!address || !amount || isDepositPending} className="btn">
+        {isDepositPending ? 'Staking...' : 'Stake'}
+      </button>
+    </div>
   );
 }
